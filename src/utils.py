@@ -1,36 +1,63 @@
-import os,sys,dill
-
-import numpy as np
-import pandas as pd
+import os, sys, dill
+from sklearn.metrics import r2_score
+from sklearn.model_selection import GridSearchCV
 from src.exception import CustomException
 
-from sklearn.metrics import r2_score
 
 def save_obj(file_path, obj):
     try:
-        dir_path = os.path.dirname(file_path)
-        os.makedirs(dir_path, exist_ok=True)
-
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with open(file_path, 'wb') as file_obj:
             dill.dump(obj, file_obj)
     except Exception as e:
         raise CustomException(e, sys)
 
-def evaluate_models(X_train, y_train, X_test, y_test, models):
+
+def evaluate_models(X_train, y_train, X_test, y_test, models, params):
     try:
         report = {}
-        for model_name, model in models.items():
-            model.fit(X_train, y_train)
+        tuned_models = {}
 
-            y_train_pred = model.predict(X_train)
-            y_test_pred = model.predict(X_test)
+        for name, model in models.items():
 
-            train_model_score = r2_score(y_train, y_train_pred)
-            test_model_score = r2_score(y_test, y_test_pred)
+            grid = GridSearchCV(
+                estimator=model,
+                param_grid=params[name],
+                scoring='r2',
+                cv=5,
+                n_jobs=-1
+            )
 
-            report[model_name] = test_model_score
-            
-        return report
-        
+            grid.fit(X_train, y_train)
+
+            best_model = grid.best_estimator_
+            tuned_models[name] = best_model
+
+            train_pred = best_model.predict(X_train)
+            test_pred = best_model.predict(X_test)
+
+            train_score = r2_score(y_train, train_pred)
+            test_score = r2_score(y_test, test_pred)
+
+            print(
+                f'{name}: Train={train_score:.4f}, '
+                f'Test={test_score:.4f}'
+            )
+
+            print(f'Best Parameters: {grid.best_params_}')
+
+            report[name] = test_score
+
+        return report, tuned_models
+
     except Exception as e:
-        raise CustomException(e,sys)
+        raise CustomException(e, sys)
+
+
+def load_object(file_path):
+    try:
+        with open(file_path, 'rb') as file_obj:
+            return dill.load(file_obj)
+
+    except Exception as e:
+        raise CustomException(e, sys)
