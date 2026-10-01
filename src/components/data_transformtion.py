@@ -47,7 +47,7 @@ class DataTransformation:
                 steps=[
                     ('imputer', SimpleImputer(strategy='most_frequent')),
                     ('one_hot_encoder', OneHotEncoder()),
-                    ('scaler', StandardScaler(with_mean=False))
+                    ('scaler', StandardScaler(with_mean=False))  # need to check again
                 ]
             )
             logging.info('...Encoding comleted for Categorical columns...')

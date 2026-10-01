@@ -7,6 +7,7 @@ from sklearn.model_selection import train_test_split
 from dataclasses import dataclass
 
 from src.components.data_transformtion import DataTransformation
+from src.components.model_trainer import ModelTrainer
 # we need to create folders ( where we need to save the data )
 
 @dataclass
@@ -46,6 +47,10 @@ if __name__=='__main__':
     data_ingestion = DataIngestion()
     train_data, test_data = data_ingestion.initiate_data_ingestion()
     data_transformation = DataTransformation()
-    data_transformation.initiate_data_transformation(train_data, test_data)
+    train_arr, test_arr, preprocessor_path  = data_transformation.initiate_data_transformation(train_data, test_data)
+
+    model_trainer = ModelTrainer()
+    r2_score = model_trainer.iniciate_model_trainer(train_arr=train_arr, test_arr=test_arr)
+    print(r2_score)
         
 
